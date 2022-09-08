@@ -7,8 +7,8 @@ dotenv.config();
 //Redirect  to long URL
 
 const redirect = async (req, res, next) => {
-	try {		
-		const url = await Url.findOne({urlCode: req.params.code});
+	try {
+		const url = await Url.findOne({ urlCode: req.params.code });
 		if (url) {
 			return res.redirect(url.longUrl);
 		} else {
@@ -27,7 +27,7 @@ const shorten = async (req, res, next) => {
 	if (!validUrl.isUri(baseUrl)) {
 		return res.status(401).json('Invalid base URL');
 	}
-	const urlCode =new RandExp(/^([A-Z]|[a-z]|[0-9]){6}$/).gen();
+
 	if (validUrl.isUri(longUrl)) {
 		try {
 			let url = await Url.findOne({
@@ -36,7 +36,20 @@ const shorten = async (req, res, next) => {
 			if (url) {
 				res.json(url);
 			} else {
-				
+
+				let urlCode = new RandExp(/^([A-Z]|[a-z]|[0-9]){6}$/).gen();
+				let existUrl = await Url.findOne({
+					urlCode: urlCode
+				});
+
+				//Check that the token is not used
+				while (existUrl) {
+					urlCode = new RandExp(/^([A-Z]|[a-z]|[0-9]){6}$/).gen();
+					existUrl = await Url.findOne({
+						urlCode: urlCode
+					});
+				}
+
 				const shortUrl = baseUrl + '/' + urlCode;
 
 				url = new Url({
